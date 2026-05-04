@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Illusion of Choice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Palette ────────────────────────────────────────────── */
+    :root {
+      --bg:          #0d0d0d;
+      --gold:        #c9a84c;
+      --gold-light:  #dfc070;
+      --gold-dim:    rgba(201,168,76,0.08);
+      --white:       #f0ece4;
+      --text:        #aeaa9e;
+      --text-soft:   #c8c4b8;
+      --text-dim:    #504e48;
+      --border:      rgba(201,168,76,0.18);
+      --border-h:    rgba(201,168,76,0.65);
+      --rule:        rgba(201,168,76,0.2);
+    }
+
+    /* ─── Reset / Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      /* very faint gold glow at center */
+      background-image: radial-gradient(ellipse 80% 70% at 50% 50%,
+        rgba(180,130,40,0.055) 0%, transparent 70%);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 400;
+      min-height: 100vh;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ─── Screen layer system ────────────────────────────────── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 1.5rem 6rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.2s ease;
+    }
+    .screen.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .inner {
+      max-width: 680px;
+      width: 100%;
+    }
+
+    /* ─── Progress ───────────────────────────────────────────── */
+    .progress {
+      text-align: center;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 3.2rem;
+    }
+
+    /* ─── Type scale ─────────────────────────────────────────── */
+    .display {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.4rem, 7vw, 3.8rem);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.08;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      color: var(--gold);
+      line-height: 1.5;
+      margin-top: 0.7rem;
+    }
+
+    .scene-heading {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 0.45rem;
+    }
+
+    .scene-source {
+      font-size: 0.73rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0;
+    }
+
+    .results-heading {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.7rem, 5vw, 2.4rem);
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0;
+    }
+
+    /* ─── Rule ───────────────────────────────────────────────── */
+    .rule {
+      width: 48px;
+      height: 1px;
+      background: var(--rule);
+      margin: 2rem 0;
+    }
+
+    /* ─── Body text ──────────────────────────────────────────── */
+    .body-text p {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 1.15rem;
+    }
+    .body-text p:last-child { margin-bottom: 0; }
+
+    .intro-lead {
+      font-size: 1.02rem;
+      line-height: 1.85;
+      color: var(--text-soft);
+      margin-bottom: 1.15rem;
+    }
+
+    .scenario-p {
+      font-size: 1.04rem;
+      line-height: 1.9;
+      color: var(--text-soft);
+      margin-bottom: 1.2rem;
+    }
+    .scenario-p:last-child { margin-bottom: 0; }
+
+    .reflection-p {
+      font-size: 0.97rem;
+      line-height: 1.9;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+    .reflection-p:last-child { margin-bottom: 0; }
+
+    /* ─── Chosen display ─────────────────────────────────────── */
+    .chosen-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.45rem;
+    }
+    .chosen-value {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      color: var(--gold);
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+
+    /* ─── The question ───────────────────────────────────────── */
+    .the-question {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: var(--white);
+      border-top: 1px solid rgba(201,168,76,0.12);
+      padding-top: 1.5rem;
+      margin-top: 2rem;
+      line-height: 1.5;
+    }
+
+    /* ─── Primary button ─────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2.8rem;
+      border: 1px solid rgba(201,168,76,0.45);
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+    }
+    .btn:hover, .btn:focus-visible {
+      background: var(--gold-dim);
+      border-color: rgba(201,168,76,0.8);
+      color: var(--gold-light);
+      outline: none;
+    }
+    .btn:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+
+    /* ─── Choice buttons ─────────────────────────────────────── */
+    .choices { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 2.2rem; }
+
+    .choice-btn {
+      padding: 1.1rem 1.4rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.96rem;
+      font-weight: 400;
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.55;
+      transition: border-color 0.35s ease, color 0.35s ease, background 0.35s ease;
+    }
+    .choice-btn:hover, .choice-btn:focus-visible {
+      border-color: var(--border-h);
+      color: var(--gold-light);
+      background: rgba(201,168,76,0.05);
+      outline: none;
+    }
+    .choice-btn:focus-visible { outline: 1px solid var(--gold); outline-offset: 2px; }
+
+    /* ─── Results: choices list ──────────────────────────────── */
+    .summary {
+      margin: 2rem 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .summary-item {
+      border-left: 2px solid rgba(201,168,76,0.22);
+      padding: 0.75rem 0 0.75rem 1.1rem;
+    }
+    .summary-scenario {
+      font-size: 0.67rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.3rem;
+    }
+    .summary-choice {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    /* ─── Results: closing text ──────────────────────────────── */
+    .closing-wrap {
+      border-top: 1px solid rgba(201,168,76,0.1);
+      padding-top: 2.5rem;
+      margin-top: 2.5rem;
+    }
+    .closing-p {
+      font-size: 0.96rem;
+      line-height: 1.95;
+      color: #7a7870;
+      margin-bottom: 1.3rem;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    .closing-p em { color: #9a9488; font-style: italic; }
+    .closing-p:last-child { margin-bottom: 0; }
+    .closing-p.in { opacity: 1; }
+
+    .final-q {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: clamp(1.5rem, 5vw, 2.15rem);
+      color: var(--gold);
+      text-align: center;
+      line-height: 1.4;
+      margin-top: 2.8rem;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+    .final-q.in { opacity: 1; }
+
+    .restart-wrap {
+      text-align: center;
+      margin-top: 2.5rem;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .restart-wrap.in { opacity: 1; }
+
+    /* ─── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #251e10; border-radius: 2px; }
+
+    /* ─── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .screen { padding: 2.8rem 1.1rem 5rem; }
+      .btn { padding: 0.85rem 2rem; }
+      .choice-btn { padding: 1rem 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════
+       INTRO
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-intro">
+    <div class="inner">
+      <p class="display">The Illusion<br>of Choice</p>
+      <p class="subtitle">A philosophical experience — inspired by a semester of questions</p>
+      <div class="rule"></div>
+
+      <p class="intro-lead">Over the past months, you have encountered philosophers who questioned everything: what is real, what is just, what we owe each other, and whether any of us truly choose our own lives.</p>
+
+      <div class="body-text">
+        <p>This site will put you in five situations.<br>
+        You will make a choice in each one.<br>
+        Afterward, we will ask whether the choice was really yours.</p>
+
+        <p>There are no correct answers here.<br>
+        Only the ones you were always going to give.</p>
+      </div>
+
+      <br>
+      <button class="btn" onclick="beginExperience()">Begin</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       SCENARIO
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-scenario">
+    <div class="inner">
+      <div class="progress" id="scenario-progress">Scenario 1 of 5</div>
+      <p class="scene-heading" id="scene-title"></p>
+      <p class="scene-source" id="scene-source"></p>
+      <div class="rule"></div>
+      <div id="scene-text"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       REFLECTION
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-reflection">
+    <div class="inner">
+      <div class="progress" id="reflect-progress">Scenario 1 of 5</div>
+
+      <p class="chosen-label">You chose</p>
+      <p class="chosen-value" id="chosen-value"></p>
+
+      <div class="rule"></div>
+
+      <div id="reflect-paras"></div>
+
+      <p class="the-question">Was this choice truly yours?</p>
+
+      <br><br>
+      <button class="btn" id="next-btn" onclick="nextScenario()">Next scenario</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       RESULTS
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-results">
+    <div class="inner">
+      <p class="results-heading">You Have Made Your Choices</p>
+
+      <div class="summary" id="summary"></div>
+
+      <div class="closing-wrap">
+        <div id="closing-paras"></div>
+      </div>
+
+      <p class="final-q" id="final-q">Did you ever really have a choice?</p>
+
+      <div class="restart-wrap" id="restart-wrap">
+        <button class="btn" onclick="startOver()">Start over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       SCRIPT
+  ═══════════════════════════════════════════════════════════ -->
+  <script>
+    /* ─── Data ──────────────────────────────────────────────── */
+
+    const scenarios = [
+      {
+        title:  "The Comfortable Shadow",
+        source: "Inspired by: Plato's Allegory of the Cave + The Truman Show",
+        paras: [
+          "You have lived your entire life in a community that feels complete. Your friends are here. Your family is here. Everything makes sense.",
+          "Only, someone you trust tells you that everything you have experienced has been carefully curated. The news you read, the history you were taught, the opportunities you were given — all shaped by people you have never met, for reasons you don't know.",
+          "You can leave and find out what is real. Or you can stay where you are comfortable and loved."
+        ],
+        choiceA: "Leave and find out",
+        choiceB: "Stay. This life is real enough.",
+        reflA: [
+          "You chose to leave the cave.",
+          "Plato's prisoners, freed from their chains, were blinded by sunlight they had never seen. He believed most people, given the choice, would return to the darkness rather than endure the pain of seeing clearly.",
+          "The Truman Show asks the same question differently. When Truman finally reaches the door, he pauses. The world inside is false — but it is the only world he has ever loved.",
+          "If the shadows were warm and the cave was home, was your choice to leave truly free — or were you always the kind of person who couldn't stop asking questions?"
+        ],
+        reflB: [
+          "You chose to stay.",
+          "Plato would say you chose the shadow over the sun. But Russell, in Appearance and Reality, reminds us that our senses never give us the thing itself — only our perception of it. The table looks different to every person who sees it. Which version is real?",
+          "If all reality is filtered through perception, then perhaps staying inside a comfortable perception is not weakness — it is simply honesty about the human condition.",
+          "Or perhaps you were always going to stay. Perhaps the kind of person you are was shaped long before you sat down here."
+        ]
+      },
+
+      {
+        title:  "The Open Door",
+        source: "Inspired by: Plato's Crito + Apology",
+        paras: [
+          "You have been convicted of a crime you did not commit — or at least, a crime you believe was no crime at all. You spoke your mind. You asked hard questions. Some people in power found it threatening.",
+          "You have been sentenced. It is unjust. Everyone knows it.",
+          "Tonight, a friend comes to you. The guards have been bribed. The door is open. You can walk out right now and live.",
+          "But you have spent your whole life arguing that we must obey just laws — and that we cannot pick and choose which laws apply to us based on our own convenience.",
+          "Do you walk out?"
+        ],
+        choiceA: "Walk out. The conviction was unjust.",
+        choiceB: "Stay. I cannot abandon my principles to save myself.",
+        reflA: [
+          "You chose to escape.",
+          "Socrates did not. In the Crito, he imagined the Laws of Athens speaking to him directly, asking: \"Did we not give you life, education, and citizenship? And now, when we inconvenience you, you wish to destroy us?\"",
+          "His argument was that a person who benefits from a society has entered into an implicit agreement to abide by its rules — even unjust ones — or to change them through persuasion, not defiance.",
+          "But Crito argued back: an unjust verdict deserves no obedience. You agreed with Crito.",
+          "The question is whether you arrived at that conclusion through reason — or whether your instinct for survival was always going to find a philosophical justification."
+        ],
+        reflB: [
+          "You chose to stay, as Socrates did.",
+          "He told Crito that he had lived his whole life by certain principles, and that to abandon them at the moment it cost him something would prove they were never really principles at all — just preferences he held when it was easy.",
+          "There is something admirable in that. There is also something worth questioning. Simone Weil wrote that uprootedness — being torn from what sustains you — is among the most dangerous conditions a person can suffer.",
+          "Socrates chose death over uprootedness from his principles. Was that freedom, or was it simply who he was — a man so formed by his convictions that he could not have chosen otherwise?"
+        ]
+      },
+
+      {
+        title:  "What to Do With What You Know",
+        source: "Inspired by: Francis Bacon's New Atlantis + Phaedo",
+        paras: [
+          "You are a researcher. After years of work, your team has made a discovery that could genuinely help millions of people.",
+          "But your organization's leadership wants to control who gets access to it. They have their reasons — profit, security, the argument that people aren't ready for it yet. They are not evil people. They genuinely believe they are protecting others.",
+          "You have a choice: release the findings publicly so anyone can use them, or trust the institution and keep it contained."
+        ],
+        choiceA: "Release it. Knowledge belongs to everyone.",
+        choiceB: "Trust the institution. They have reasons I may not fully understand.",
+        reflA: [
+          "You chose to release it.",
+          "Francis Bacon imagined Solomon's House — a society of scientists whose entire purpose was \"the knowledge of causes and secret motions of things\" for the benefit of humanity. But even in his utopia, the scientists voted on which discoveries the public was ready to receive.",
+          "Bacon trusted the institution. You did not.",
+          "Socrates, in the Phaedo, argued that the philosopher's purpose is to pursue truth without compromise — that the soul drawn toward knowledge cannot be satisfied with half-truths managed by committees.",
+          "But here is the question Bacon's New Atlantis quietly raises: who decides what is good for humanity? You? Or the people you just overruled?"
+        ],
+        reflB: [
+          "You chose to trust the institution.",
+          "Bacon's Bensalem is built on exactly this trust. The scientists of Solomon's House hold enormous power, and they use it carefully and prayerfully — but they are still a small group of unelected people deciding what the rest of the world gets to know.",
+          "Bacon saw this as wisdom. Others might call it paternalism.",
+          "The soul, Socrates argued in the Phaedo, is always drawn toward the true and the good — but it can be clouded by the body's desires, including the desire for safety, comfort, and belonging to the right institution.",
+          "Were you reasoning clearly — or were you always going to defer to the authority you have been trained to trust?"
+        ]
+      },
+
+      {
+        title:  "Where You Belong",
+        source: "Inspired by: Simone Weil's The Need for Roots",
+        paras: [
+          "You have been offered an extraordinary opportunity — a position that will advance your career significantly, in a city far from home. The salary is life-changing.",
+          "But your community is struggling. Your family is here. The people who shaped you are here. There are things you could do here that no one else will do if you leave.",
+          "The opportunity will not come again. Neither will this time in your community."
+        ],
+        choiceA: "Take the opportunity. Growth requires leaving.",
+        choiceB: "Stay. Some things matter more than advancement.",
+        reflA: [
+          "You chose to leave.",
+          "Simone Weil would understand the pull — but she would grieve the choice.",
+          "Writing in 1943, surrounded by a world that had been violently uprooted by war and modernity, Weil argued that rootedness — belonging to a real community with history and memory and living relationships — is one of the most fundamental human needs.",
+          "\"The future brings us nothing, gives us nothing,\" she wrote. \"It is we who in order to build it have to give it everything, our very life.\"",
+          "She would ask: what are you building toward? And what living sap — what stored-up treasure from the past — will you be drawing on once you have left the place that made you?"
+        ],
+        reflB: [
+          "You chose to stay.",
+          "Weil believed this was the deeper wisdom — not because ambition is wrong, but because uprootedness is one of the most dangerous conditions a human being can suffer.",
+          "She watched an entire civilization come unmoored from its past and saw what happened: people became susceptible to anything that promised them a sense of belonging again, including totalitarianism.",
+          "But there is another question worth sitting with. Were you choosing your community — or were you choosing the version of yourself that does not have to risk being unknown somewhere new?"
+        ]
+      },
+
+      {
+        title:  "The Way Things Are",
+        source: "Inspired by: bell hooks' Feminism is for Everybody",
+        paras: [
+          "You are in a meeting. Someone at the table — a colleague you respect — says something that you know is wrong. Not factually wrong. Wrong in the way that it casually treats a group of people as less important.",
+          "No one else reacts. The meeting moves on. You could say something. It would be uncomfortable. It might change how people see you. It might not even change anything.",
+          "Or you could let it go. You have said things like this yourself without thinking. Everyone has. The world is complicated."
+        ],
+        choiceA: "Say something.",
+        choiceB: "Let it go. One comment won't change the system.",
+        reflA: [
+          "You chose to speak.",
+          "bell hooks argued that the most dangerous feature of patriarchy — or any system of domination — is not its cruelty, but its invisibility. The moment you name it, you have already begun to dismantle it.",
+          "She also wrote about the damage done to boys from the earliest age — taught to suppress grief, longing, tenderness — and how that suppression ripples outward into every relationship and institution they inhabit.",
+          "The person who made that comment was probably not a villain. They were probably just someone who had never been asked to see it.",
+          "You asked them to see it.",
+          "But here is the question: did you speak because you reasoned your way to the right conclusion — or because you are the kind of person who cannot stay quiet? Were you ever going to stay silent?"
+        ],
+        reflB: [
+          "You chose silence.",
+          "hooks would say this is how the system sustains itself — not through dramatic acts of oppression, but through the accumulated weight of small silences.",
+          "But she would also understand. She wrote about the exhaustion of speaking into rooms that are not ready to hear. She wrote about the cost of being the one who always says something.",
+          "Socrates made a career of being the one who always said something, and Athens eventually decided it had heard enough.",
+          "The question is not whether you were wrong to stay quiet. The question is whether your silence was a choice — or whether everything in your formation up to this moment had already made the decision for you."
+        ]
+      }
+    ];
+
+    /* ─── Closing text ──────────────────────────────────────── */
+
+    const closingParas = [
+      "Every choice in this experience felt like yours.",
+      "And yet — you did not choose the family you were born into, the fears that formed you, the instincts that rose up before your reason could catch them.",
+      "Plato believed the soul existed before the body, already shaped by truth it had once seen clearly and was now trying to remember.",
+      "Simone Weil believed we are sustained by roots we did not plant and nourished by a past we did not choose.",
+      "bell hooks believed that the systems we are born into shape us in ways we spend our whole lives trying to see clearly.",
+      "Francis Bacon believed knowledge was power — but even he trusted the wise few to decide what the rest of us were ready to know.",
+      "Socrates chose death over contradiction. Was that freedom? Or was it simply who he was?",
+      "Arthur Schopenhauer wrote: <em>\"Man can do what he wills, but he cannot will what he wills.\"</em>",
+      "You moved through five doorways tonight. At each one, it felt like you were deciding.",
+      "But were you?"
+    ];
+
+    /* ─── State ─────────────────────────────────────────────── */
+    let idx = 0;
+    let choices = [];
+
+    /* ─── Screen transition ──────────────────────────────────── */
+    function showScreen(id, cb) {
+      const cur = document.querySelector('.screen.visible');
+      if (cur) cur.classList.remove('visible');
+      setTimeout(() => {
+        const next = document.getElementById(id);
+        next.scrollTop = 0;
+        next.classList.add('visible');
+        if (cb) cb();
+      }, 1250);
+    }
+
+    /* ─── Load scenario ──────────────────────────────────────── */
+    function loadScenario(i) {
+      const s = scenarios[i];
+
+      document.getElementById('scenario-progress').textContent =
+        `Scenario ${i + 1} of ${scenarios.length}`;
+
+      document.getElementById('scene-title').textContent  = s.title;
+      document.getElementById('scene-source').textContent = s.source;
+
+      document.getElementById('scene-text').innerHTML =
+        s.paras.map(p => `<p class="scenario-p">${p}</p>`).join('');
+
+      const box = document.getElementById('choices');
+      box.innerHTML = '';
+      [
+        { label: s.choiceA, key: 'A' },
+        { label: s.choiceB, key: 'B' }
+      ].forEach(({ label, key }) => {
+        const b = document.createElement('button');
+        b.className = 'choice-btn';
+        b.textContent = label;
+        b.onclick = () => makeChoice(key);
+        box.appendChild(b);
+      });
+    }
+
+    /* ─── Handle choice ──────────────────────────────────────── */
+    function makeChoice(key) {
+      const s = scenarios[idx];
+      const label = key === 'A' ? s.choiceA : s.choiceB;
+      const paras  = key === 'A' ? s.reflA    : s.reflB;
+
+      choices.push({ title: s.title, label });
+
+      document.getElementById('reflect-progress').textContent =
+        `Scenario ${idx + 1} of ${scenarios.length}`;
+
+      document.getElementById('chosen-value').textContent = `"${label}"`;
+
+      document.getElementById('reflect-paras').innerHTML =
+        paras.map(p => `<p class="reflection-p">${p}</p>`).join('');
+
+      document.getElementById('next-btn').textContent =
+        idx === scenarios.length - 1 ? 'See your choices' : 'Next scenario';
+
+      showScreen('screen-reflection');
+    }
+
+    /* ─── Advance ────────────────────────────────────────────── */
+    function nextScenario() {
+      idx++;
+      if (idx >= scenarios.length) {
+        buildResults();
+        showScreen('screen-results', animateClosing);
+      } else {
+        loadScenario(idx);
+        showScreen('screen-scenario');
+      }
+    }
+
+    /* ─── Build results ──────────────────────────────────────── */
+    function buildResults() {
+      document.getElementById('summary').innerHTML = choices.map((c, i) => `
+        <div class="summary-item">
+          <div class="summary-scenario">${scenarios[i].title}</div>
+          <div class="summary-choice">${c.label}</div>
+        </div>`).join('');
+
+      document.getElementById('closing-paras').innerHTML =
+        closingParas.map(p => `<p class="closing-p">${p}</p>`).join('');
+
+      document.getElementById('final-q').classList.remove('in');
+      document.getElementById('restart-wrap').classList.remove('in');
+    }
+
+    /* ─── Animate closing text ───────────────────────────────── */
+    function animateClosing() {
+      const ps = document.querySelectorAll('.closing-p');
+      ps.forEach((p, i) => {
+        setTimeout(() => p.classList.add('in'), 700 + i * 820);
+      });
+      const after = 700 + ps.length * 820;
+      setTimeout(() => document.getElementById('final-q').classList.add('in'),     after + 500);
+      setTimeout(() => document.getElementById('restart-wrap').classList.add('in'), after + 1800);
+    }
+
+    /* ─── Entry ──────────────────────────────────────────────── */
+    function beginExperience() {
+      idx = 0; choices = [];
+      loadScenario(0);
+      showScreen('screen-scenario');
+    }
+
+    function startOver() {
+      idx = 0; choices = [];
+      showScreen('screen-intro');
+    }
+
+    /* ─── Boot ───────────────────────────────────────────────── */
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('screen-intro').classList.add('visible');
+      }, 200);
+    });
+  </script>
+</body>
+</html>
